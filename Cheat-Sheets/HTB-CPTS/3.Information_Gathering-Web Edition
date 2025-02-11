@@ -1,0 +1,137 @@
+# Web Reconnaissance
+
+Web reconnaissance is the first step in any security assessment or penetration testing engagement. It's akin to a detective's initial investigation, meticulously gathering clues and evidence about a target before formulating a plan of action. In the digital realm, this translates to accumulating information about a website or web application to identify potential vulnerabilities, security misconfigurations, and valuable assets.
+
+## Primary Goals of Web Reconnaissance
+
+The primary goals of web reconnaissance revolve around gaining a comprehensive understanding of the target's digital footprint. This includes:
+
+- **Identifying Assets**: Discovering all associated domains, subdomains, and IP addresses provides a map of the target's online presence.
+- **Uncovering Hidden Information**: Web reconnaissance aims to uncover directories, files, and technologies that are not readily apparent and could serve as entry points for an attacker.
+- **Analyzing the Attack Surface**: By identifying open ports, running services, and software versions, you can assess the potential vulnerabilities and weaknesses of the target.
+- **Gathering Intelligence**: Collecting information about employees, email addresses, and technologies used can aid in social engineering attacks or identifying specific vulnerabilities associated with certain software.
+
+## Types of Web Reconnaissance
+
+Web reconnaissance can be conducted using either active or passive techniques, each with its own advantages and drawbacks:
+
+| Type | Description | Risk of Detection | Examples |
+|------|------------|------------------|----------|
+| **Active Reconnaissance** | Involves directly interacting with the target system, such as sending probes or requests. | Higher | Port scanning, vulnerability scanning, network mapping |
+| **Passive Reconnaissance** | Gathers information without directly interacting with the target, relying on publicly available data. | Lower | Search engine queries, WHOIS lookups, DNS enumeration, web archive analysis, social media |
+
+## WHOIS
+
+WHOIS is a query and response protocol used to retrieve information about domain names, IP addresses, and other internet resources. It provides details such as domain ownership, registration date, and contact information.
+
+### Example Command:
+```bash
+whois example.com
+```
+This command returns information including the registrar, registration and expiration dates, nameservers, and contact details.
+
+## DNS (Domain Name System)
+
+The Domain Name System (DNS) translates user-friendly domain names into numerical IP addresses. DNS enumeration helps in understanding a target's infrastructure.
+
+### Example Command:
+```bash
+dig example.com A
+```
+This command retrieves the A record (IPv4 address) of the domain.
+
+### Common DNS Record Types:
+
+| Record Type | Description |
+|------------|-------------|
+| **A** | Maps a hostname to an IPv4 address. |
+| **AAAA** | Maps a hostname to an IPv6 address. |
+| **CNAME** | Creates an alias for a hostname. |
+| **MX** | Specifies mail servers responsible for email handling. |
+| **NS** | Delegates a DNS zone to an authoritative name server. |
+| **TXT** | Stores arbitrary text information. |
+| **SOA** | Contains administrative information about a DNS zone. |
+
+## Subdomains
+
+Subdomains are extensions of a primary domain, often used for organizing services. Discovering subdomains can expose additional attack surfaces.
+
+### Subdomain Enumeration Techniques:
+
+| Approach | Description | Examples |
+|----------|-------------|----------|
+| **Active Enumeration** | Directly interacts with the target's DNS servers. | Brute-forcing, DNS zone transfers |
+| **Passive Enumeration** | Relies on public sources without direct interaction. | Certificate Transparency (CT) logs, search engine queries |
+
+### Subdomain Brute-Forcing
+
+Brute-forcing subdomains involves systematically testing potential subdomain names.
+
+#### Example Command:
+```bash
+dnsenum example.com -f subdomains.txt
+```
+
+## Zone Transfers
+
+A DNS zone transfer (AXFR) provides a complete copy of a DNS zone file, listing all subdomains and associated records.
+
+#### Example Command:
+```bash
+dig @ns1.example.com example.com axfr
+```
+Note: Many DNS servers restrict zone transfers to authorized hosts only.
+
+## Virtual Hosts
+
+Virtual hosting allows multiple websites to share a single IP address. Brute-forcing virtual hosts helps identify hidden services.
+
+#### Example Command:
+```bash
+gobuster vhost -u http://192.0.2.1 -w hostnames.txt
+```
+
+## Certificate Transparency (CT) Logs
+
+CT logs record SSL/TLS certificates issued for domains, revealing subdomains.
+
+#### Example Command:
+```bash
+curl -s "https://crt.sh/?q=%25.example.com&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u
+```
+
+## Web Crawling
+
+Web crawling systematically explores a website's structure, uncovering hidden resources.
+
+### Example Scrapy Spider:
+```python
+import scrapy
+
+class ExampleSpider(scrapy.Spider):
+    name = "example"
+    start_urls = ['http://example.com/']
+
+    def parse(self, response):
+        for link in response.css('a::attr(href)').getall():
+            if not link.startswith("#") and not link.startswith("mailto:"):
+                yield response.follow(link, callback=self.parse)
+```
+
+### Extracting Links from Crawled Data:
+```bash
+jq -r '.[] | select(.file != null) | .file' example_data.json | sort -u
+```
+
+## Search Engine Discovery (Google Dorking)
+
+Google Dorking uses search operators to uncover hidden information.
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| **site:** | Restricts search results to a specific website. | `site:example.com` |
+| **filetype:** | Searches for specific file types. | `filetype:pdf site:example.com` |
+| **intitle:** | Searches for pages with a specific title. | `intitle:"index of"` |
+| **inurl:** | Finds URLs containing specific keywords. | `inurl:admin` |
+
+By leveraging these techniques, web reconnaissance provides valuable insights into a target's infrastructure, potential vulnerabilities, and security posture.
