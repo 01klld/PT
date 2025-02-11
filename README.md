@@ -22,4 +22,5 @@ To get started with the resources in this repository:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/penetration-testing-repo.git
+   git clone https://github.com/01klld/PT.git
+   ```
